@@ -1,3 +1,5 @@
+package eu.hassanlab.rdnwdp
+
 import ij.ImagePlus
 import groovy.io.FileType
 import io.scif.services.FormatService
@@ -26,7 +28,7 @@ import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
 
 
-@Plugin(type=Command.class)
+@Plugin(type = Command.class)
 class PreProcessing implements Command {
 
     @Parameter
@@ -44,53 +46,49 @@ class PreProcessing implements Command {
     @Parameter
     private FormatService formatService
 
+    @Parameter(style = "directory")
+    private File inputFolder
+
+    @Parameter(style = "directory", required = false, persist = false)
+    private File outputFolder
+
+    @Parameter(style = "listBox", choices = ["HDF5", "Olympus OIF"])
+    private String dataFormat = "Olympus OIF"
+
+    @Parameter
+    private String offsetString
+
+    @Parameter
+    private String rawPrefix = "raw"
+
+    @Parameter
+    private String alignedPrefix = "aligned"
+
+    @Parameter(required = false)
+    private Integer threads
+
 
     void run() {
-        /**
-        List<File> list = []
-        def dir = new File("/Users/radoslaw.ejsmont/Desktop/171106")
-        dir.eachFileRecurse (FileType.FILES) { file ->
-            if (file.path.endsWith(".oif")) {
-                list << file
-            }
+        String extension
+        if (dataFormat == "Olympus OIF") {
+            extension = ".oif"
+        } else {
+            extension = ".h5"
+        }
+        if (! outputFolder) {
+            outputFolder = inputFolder
+        }
+        if (! threads) {
+            threads = Runtime.getRuntime().availableProcessors() - 2
         }
 
-        List<FileNameSet> samples = []
-        list.each {
-            if (it.path.toLowerCase().contains("dapi")) {
-                def sample = new MATLFileNameSet(it, list, dir.path)
-                if (sample.initialized) {
-                    samples.add(sample)
-                }
-            }
-        }
-        **/
-
-        List<File> list = []
-        def dir = new File("/Users/radoslaw.ejsmont/Desktop/171106")
-        dir.eachFileRecurse (FileType.FILES) { file ->
-            if (file.path.endsWith(".h5")) {
-                list << file
-            }
-        }
-
-        List<FileNameSet> samples = []
-        list.each {
-            def sample = new HDF5FileNameSet(it)
-            if (sample.initialized) {
-                samples.add(sample)
-            }
-        }
-
-        double[] offsets = [0.0, -1.0, -1.0]
-
-        /**
-        //def pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 4)
-        def pool = Executors.newFixedThreadPool(2)
+        def samples = findSamples(extension)
+        def offsets = offsetString.replaceAll("\\s","").tokenize( ',' )
+        def pool = Executors.newFixedThreadPool(threads)
         def ecs = new ExecutorCompletionService(pool)
 
         samples.each {
-            ecs.submit(new ImagePreprocessor(it, offsets))
+            ecs.submit(new ImagePreprocessor(it, offsets as double[]))
         }
 
         def submitted = samples.size()
@@ -100,12 +98,31 @@ class PreProcessing implements Command {
         }
 
         pool.shutdown()
-        **/
+    }
 
-        samples.each {
-            def processor = new ImagePreprocessor(it, offsets)
-            processor.call()
+    private findSamples(String extension) {
+        List<File> list = []
+        List<FileNameSet> samples = []
+
+        inputFolder.eachFileRecurse (FileType.FILES) { file ->
+            if (file.path.endsWith(extension)) {
+                list << file
+            }
         }
+
+        list.each {
+            def sample = null
+            if (extension == ".h5") {
+                sample = new HDF5FileNameSet(it)
+            } else if (it.path.toLowerCase().contains("dapi")) {
+                sample = new MATLFileNameSet(it, list, outputFolder.path)
+            }
+            if ((sample) && (sample.initialized)) {
+                samples.add(sample)
+            }
+        }
+
+        return samples
     }
 
     class DatasetFile extends File {
@@ -486,9 +503,9 @@ class PreProcessing implements Command {
             sources.images.each { name, image ->
                 def imp = convertService.convert(image, ImagePlus)
                 if (image.dimension(Axes.CHANNEL) > 1) {
-                    HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/raw2/$name/channel{c}", "", "%d", 9, false)
+                    HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/$rawPrefix/$name/channel{c}", "", "%d", 9, false)
                 } else {
-                    HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/raw2/$name", "", "", 9, false)
+                    HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/$rawPrefix/$name", "", "", 9, false)
                 }
                 imp.close()
             }
@@ -503,7 +520,7 @@ class PreProcessing implements Command {
             def image = processed.getAlignedImage(offsets)
             if (image) {
                 def imp = convertService.convert(image, ImagePlus)
-                HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/aligned2/channel{c}", "", "%d", 0, false)
+                HDF5ImageJ.hdf5write(imp, files.hdf5.path, "/$alignedPrefix/channel{c}", "", "%d", 0, false)
                 imp.close()
             }
             println "Aligned data export done."
