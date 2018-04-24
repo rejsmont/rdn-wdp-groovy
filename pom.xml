@@ -15,8 +15,70 @@
     <artifactId>rdn-wdp-groovy</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <name>RDN-WDP</name>
+    <description>ImageJ plugins for RDN-WDP.</description>
+    <url>https://github.com/rejsmont/rdn-wdp-groovy</url>
+    <inceptionYear>2017</inceptionYear>
+    <organization>
+        <name>Hassan Lab</name>
+        <url>http://hassanlab.eu/</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>The MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>rejsmont</id>
+            <name>Radoslaw Kamil Ejsmont</name>
+            <roles>
+                <role>lead</role>
+                <role>reviewer</role>
+                <role>support</role>
+                <role>maintainer</role>
+                <role>founder</role>
+            </roles>
+        </developer>
+    </developers>
+    <contributors>
+        <contributor>
+            <name>Bassem A. Hassan</name>
+            <roles><role>lead</role></roles>
+        </contributor>
+    </contributors>
+
+    <mailingLists>
+        <mailingList>
+            <name>The Hassan Lab Wiki</name>
+            <archive>http://wiki.hassanlab.eu/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:git:git://github.com/rejsmont/rdn-wdp-groovy</connection>
+        <developerConnection>scm:git:git@github.com:rejsmont/rdn-wdp-groovy</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/rejsmont/rdn-wdp-groovy</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/rejsmont/rdn-wdp-groovy/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.org/rejsmont/rdn-wdp-groovy</url>
+    </ciManagement>
+
     <properties>
-    <main-class>Main</main-class>
+        <license.licenseName>mit</license.licenseName>
+        <license.copyrightOwners>ICM</license.copyrightOwners>
+        <releaseProfiles>deploy-to-imagej</releaseProfiles>
+        <main-class>eu.hassanlab.rdnwdp.MainClass</main-class>
+        <enforcer.skip>true</enforcer.skip>
     </properties>
 
     <repositories>
@@ -38,11 +100,16 @@
             <groupId>sc.fiji</groupId>
             <artifactId>HDF5_Vibez</artifactId>
             <version>0.2.99-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>cisd</groupId>
+                    <artifactId>jhdf5</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
@@ -52,19 +119,21 @@
         <dependency>
             <groupId>io.scif</groupId>
             <artifactId>scifio</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>io.scif</groupId>
             <artifactId>scifio-bf-compat</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ome</groupId>
             <artifactId>formats-bsd</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ome</groupId>
             <artifactId>formats-gpl</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 </project>
