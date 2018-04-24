@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
 
 
-@Plugin(type = Command.class)
+@Plugin(type = Command.class, menuPath = "Plugins>PreProcessing")
 class PreProcessing implements Command {
 
     @Parameter
@@ -59,7 +59,7 @@ class PreProcessing implements Command {
     private String datasetNameString = "/raw/dapi/channel0, /raw/venus/channel0, /raw/mcherry/channel0"
 
     @Parameter(label = "Alignment offsets")
-    private String offsetString
+    private String offsetString = "0, 0, 0"
 
     @Parameter(label = "Raw dataset prefix (output)")
     private String rawPrefix = "raw"
