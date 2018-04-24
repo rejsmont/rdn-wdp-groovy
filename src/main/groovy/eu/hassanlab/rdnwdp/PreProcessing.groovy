@@ -70,7 +70,7 @@ class PreProcessing implements Command {
     @Parameter(label = "Number of threads", required = false)
     private Integer threads
 
-
+    @Override
     void run() {
         String extension
         if (dataFormat == "Olympus OIF") {
