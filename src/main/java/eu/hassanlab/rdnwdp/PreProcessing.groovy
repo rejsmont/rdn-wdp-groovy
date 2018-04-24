@@ -46,25 +46,28 @@ class PreProcessing implements Command {
     @Parameter
     private FormatService formatService
 
-    @Parameter(style = "directory")
+    @Parameter(label = "Input folder", style = "directory")
     private File inputFolder
 
-    @Parameter(style = "directory", required = false, persist = false)
+    @Parameter(label = "Output folder", style = "directory", required = false, persist = false)
     private File outputFolder
 
-    @Parameter(style = "listBox", choices = ["HDF5", "Olympus OIF"])
+    @Parameter(label = "Data format", style = "listBox", choices = ["HDF5", "Olympus OIF"])
     private String dataFormat = "Olympus OIF"
 
-    @Parameter
+    @Parameter(label = "HDF5 datasets")
+    private String datasetNameString = "/raw/dapi/channel0, /raw/venus/channel0, /raw/mcherry/channel0"
+
+    @Parameter(label = "Alignment offsets")
     private String offsetString
 
-    @Parameter
+    @Parameter(label = "Raw dataset prefix (output)")
     private String rawPrefix = "raw"
 
-    @Parameter
+    @Parameter(label = "Aligned dataset prefix (output)")
     private String alignedPrefix = "aligned"
 
-    @Parameter(required = false)
+    @Parameter(label = "Number of threads", required = false)
     private Integer threads
 
 
@@ -103,6 +106,7 @@ class PreProcessing implements Command {
     private findSamples(String extension) {
         List<File> list = []
         List<FileNameSet> samples = []
+        List<String> datasetNames = datasetNameString.replaceAll("\\s","").tokenize( ',' )
 
         inputFolder.eachFileRecurse (FileType.FILES) { file ->
             if (file.path.endsWith(extension)) {
@@ -113,7 +117,7 @@ class PreProcessing implements Command {
         list.each {
             def sample = null
             if (extension == ".h5") {
-                sample = new HDF5FileNameSet(it)
+                sample = new HDF5FileNameSet(it, datasetNames)
             } else if (it.path.toLowerCase().contains("dapi")) {
                 sample = new MATLFileNameSet(it, list, outputFolder.path)
             }
@@ -235,16 +239,11 @@ class PreProcessing implements Command {
 
     class HDF5FileNameSet extends FileNameSet {
 
-        HDF5FileNameSet(File hdf5file) {
+        HDF5FileNameSet(File hdf5file, List<String> datasets) {
             super()
-            /**
-            sources.put("dapi", new DatasetFile(hdf5file.path, "/raw/dapi/channel0"))
-            sources.put("venus", new DatasetFile(hdf5file.path, "/raw/venus/channel0"))
-            sources.put("mcherry", new DatasetFile(hdf5file.path, "/raw/mcherry/channel0"))
-             **/
-            sources.put("dapi", new DatasetFile(hdf5file.path, "/raw/dapi"))
-            sources.put("venus", new DatasetFile(hdf5file.path, "/raw/venus"))
-            sources.put("mcherry", new DatasetFile(hdf5file.path, "/raw/mcherry"))
+            sources.put("dapi", new DatasetFile(hdf5file.path, datasets[0]))
+            sources.put("venus", new DatasetFile(hdf5file.path, datasets[1]))
+            sources.put("mcherry", new DatasetFile(hdf5file.path, datasets[2]))
             hdf5 = hdf5file
             initialized = true
         }
